@@ -1,3 +1,24 @@
+# Entornos y cachés de Python
 .venv/
+venv/
 __pycache__/
 *.pyc
+
+# Archivos de herramientas de IA y editores (no forman parte de la entrega)
+.cursor/
+.cursorrules
+.cursorignore
+.cursorindexingignore
+.claude/
+CLAUDE.md
+.github/copilot-instructions.md
+.vscode/
+.idea/
+
+# Borrador del mensaje del foro (se publica en el foro, no en el repositorio)
+MENSAJE_FORO.md
+
+# Sistema operativo
+Thumbs.db
+desktop.ini
+.DS_Store
