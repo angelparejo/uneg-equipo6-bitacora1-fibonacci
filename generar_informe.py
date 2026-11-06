@@ -39,7 +39,7 @@ INTEGRANTES = [
     "Anthony Aular",
     "Aaron Urbina",
     "Sigles Velasquez",
-    "Carolina",  # pendiente: apellido (GitHub: carolinabrito84)
+    "Carolina Brito",
 ]
 
 if Path(r"C:\Windows\Fonts\arial.ttf").exists():
