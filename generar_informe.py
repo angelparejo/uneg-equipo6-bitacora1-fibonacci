@@ -35,9 +35,11 @@ ASIGNATURA = "Análisis y Diseño de Algoritmos · Prof. Ana Sosa"
 # Cada compañero puede agregar o corregir su propio nombre en su commit.
 INTEGRANTES = [
     "Angel Parejo",
-    # "Nombre Apellido",  # GitHub: carolinabrito84
-    # "Nombre Apellido",  # GitHub: asalazars23
-    # "Nombre Apellido",  # GitHub: anthojesus
+    "Abraham Salazar",
+    "Anthony Aular",
+    "Aaron Urbina",
+    "Sigles",    # pendiente: apellido
+    "Carolina",  # pendiente: apellido (GitHub: carolinabrito84)
 ]
 
 if Path(r"C:\Windows\Fonts\arial.ttf").exists():
