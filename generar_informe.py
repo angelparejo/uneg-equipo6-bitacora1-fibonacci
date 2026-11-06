@@ -38,7 +38,7 @@ INTEGRANTES = [
     "Abraham Salazar",
     "Anthony Aular",
     "Aaron Urbina",
-    "Sigles",    # pendiente: apellido
+    "Sigles Velasquez",
     "Carolina",  # pendiente: apellido (GitHub: carolinabrito84)
 ]
 
