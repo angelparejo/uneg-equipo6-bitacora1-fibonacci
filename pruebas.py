@@ -31,6 +31,18 @@ class PruebasFibonacci(unittest.TestCase):
             with self.subTest(n=n):
                 self.assertEqual(fibonacci_ingenuo(n), fibonacci_iterativo(n))
 
+    def test_valores_grandes_conocidos(self):
+        """Comprueba la función real, no una copia del ciclo, con valores publicados (OEIS A000045)."""
+        conocidos = {
+            50: 12586269025,
+            100: 354224848179261915075,
+            200: 280571172992510140037611932413038677189525,
+        }
+        for n, esperado in conocidos.items():
+            with self.subTest(n=n):
+                self.assertEqual(fibonacci_iterativo(n), esperado)
+        self.assertEqual(fibonacci_ingenuo(25), 75025)
+
     def test_invariante_del_ciclo(self):
         """Reconstruye F con la recurrencia y revisa el invariante en cada vuelta."""
         n = 30

@@ -22,6 +22,11 @@ EQUIPO = "6"
 PDF_NOMBRE = f"Equipo_{EQUIPO}_Bitacora1.pdf"
 PHI = (1 + math.sqrt(5)) / 2
 
+# Interpretación de la reproducción en Linux, redactada por quien la hizo.
+# Si queda vacío, el informe muestra solo la tabla comparativa.
+COMENTARIO_LINUX = """
+"""
+
 if Path(r"C:\Windows\Fonts\arial.ttf").exists():
     FUENTES = {
         "": r"C:\Windows\Fonts\arial.ttf",
@@ -91,30 +96,33 @@ def ejecutar_pruebas():
 
 def redaccion_iterativa(filas):
     valores = razones(filas)
-    ultima = valores[-1]
-    grado = math.log2(ultima)
+    media = sum(valores) / len(valores)
+    grado = math.log2(media)
     serie = ", ".join(fmt_razon(valor) for valor in valores)
-    if ultima >= 3.2:
-        lectura = (
-            f"La última razón es {fmt_razon(ultima)} y el grado estimado, "
-            f"log2 de esa razón, es {grado:.2f}. El modelo de sumas a costo constante "
-            "predice 2 y el modelo de bits predice 4. La medición favorece el costo "
-            "cuadrático: F(n) tiene Θ(n) bits y sumarlos no es una operación de costo fijo."
+    base = (
+        f"La razón media es {fmt_razon(media)} y el grado estimado, log2 de la media, "
+        f"es {grado:.2f}. Se usa la media y no solo la última razón porque cada cociente "
+        f"individual oscila con el ruido del reloj (aquí entre {fmt_razon(min(valores))} "
+        f"y {fmt_razon(max(valores))}). "
+    )
+    if media >= 3.2:
+        lectura = base + (
+            "El modelo de sumas a costo constante predice 2 y el modelo de bits predice 4. "
+            "La medición favorece el costo cuadrático: F(n) tiene Θ(n) bits y sumarlos no "
+            "es una operación de costo fijo."
         )
-    elif ultima >= 2.5:
-        lectura = (
-            f"La última razón es {fmt_razon(ultima)} y el grado estimado es {grado:.2f}. "
+    elif media >= 2.5:
+        lectura = base + (
             "Ese cociente ya se separa de 2, que sería lo propio de un costo lineal, "
             "y camina hacia 4, que es lo propio del costo cuadrático de los bits."
         )
     else:
-        lectura = (
-            f"La última razón es {fmt_razon(ultima)} y el grado estimado es {grado:.2f}. "
+        lectura = base + (
             "En estos tamaños el tiempo todavía se parece al modelo lineal de Θ(n) sumas. "
             "El término de bits, Θ(n²), pesa más cuando n sigue creciendo, porque la "
             "cantidad de dígitos de F(n) no está acotada."
         )
-    return ultima, grado, (
+    return media, grado, (
         f"Las razones T(2n)/T(n) del iterativo, en el orden de los tamaños, fueron {serie}. "
         + lectura
     )
@@ -148,10 +156,26 @@ def redaccion_ingenua(filas):
             "medición de la referencia φ^(n/2). La lectura del orden se apoya en ese "
             "crecimiento, no en un solo cociente."
         )
+    por_n = {fila["n"]: fila for fila in filas}
+    for n, razon, teoria, cociente in comparaciones:
+        if 0.75 <= cociente <= 1.35:
+            continue
+        texto += (
+            f" La pareja n = {n} se aparta: su razón {fmt_razon(razon)} es {cociente:.2f} "
+            f"veces la referencia {fmt_razon(teoria)}."
+        )
+        mitad = por_n.get(n // 2)
+        if mitad and mitad["mediana_s"] > 1.3 * mitad["minimo_s"]:
+            texto += (
+                f" La causa está en la medición de n = {n // 2}: su mediana "
+                f"({fmt_tiempo(mitad['mediana_s'])} s) supera en "
+                f"{mitad['mediana_s'] / mitad['minimo_s']:.1f} veces a su propio mínimo "
+                f"({fmt_tiempo(mitad['minimo_s'])} s). Es ruido del reloj, no un cambio de orden."
+            )
     return mayor, texto
 
 
-def construir_resumen(filas_iter, filas_ing, ultima, grado, mayor):
+def construir_resumen(filas_iter, filas_ing, media, grado, mayor):
     serie = ", ".join(fmt_razon(valor) for valor in razones(filas_iter))
     menor = min(razones(filas_ing))
     resumen = f"""Esta bitácora compara dos formas de calcular el n-ésimo Fibonacci. La ingenua obtiene F(n) sumando F(n-1) y F(n-2), y repite subproblemas ya resueltos. La iterativa guarda los dos últimos valores y avanza desde 2 hasta n. Las dos exigen un entero n mayor o igual que 0 y devuelven F(n), con F(0) = 0, F(1) = 1 y F(n) = F(n-1) + F(n-2).
@@ -160,7 +184,7 @@ La corrección del iterativo usa un invariante de ciclo. Al empezar la iteració
 
 El ingenuo cumple T(n) = T(n-1) + T(n-2) + Θ(1), así que T(n) = Θ(φ^n), con φ aproximadamente 1,618. Su razón T(2n)/T(n) crece y no se estabiliza. El iterativo hace Θ(n) sumas. Si cada suma costara lo mismo, la razón tendería a 2. En Python, F(n) ocupa Θ(n) bits y la suma del paso i cuesta Θ(i): el total es Θ(n²) y la razón tiende a 4.
 
-El experimento midió con time.perf_counter la mediana de cinco repeticiones, en tamaños que se duplican. Las razones del iterativo fueron {serie}. La última fue {fmt_razon(ultima)} y el grado estimado log2 fue {grado:.2f}. Se lee frente a 2, referencia lineal, y frente a 4, referencia cuadrática de bits. Las razones del ingenuo fueron de {fmt_razon(menor)} a {fmt_razon(mayor)} y siguen creciendo: es la firma exponencial. Para n grande sirve el iterativo, y el tiempo medido obliga a contar el costo de los enteros grandes."""
+El experimento midió con time.perf_counter la mediana de cinco repeticiones, en tamaños que se duplican. Las razones del iterativo fueron {serie}. La media fue {fmt_razon(media)} y el grado estimado log2 fue {grado:.2f}. Se lee frente a 2, referencia lineal, y frente a 4, referencia cuadrática de bits. Las razones del ingenuo fueron de {fmt_razon(menor)} a {fmt_razon(mayor)} y siguen creciendo: es la firma exponencial. Para n grande sirve el iterativo, y el tiempo medido obliga a contar el costo de los enteros grandes."""
     palabras = len(resumen.split())
     if not 200 <= palabras <= 300:
         raise SystemExit(
@@ -352,6 +376,49 @@ Datos de la corrida que sostiene el resumen
     (RAIZ.parent / "MENSAJE_FORO.md").write_text(texto, encoding="utf-8")
 
 
+def seccion_reproduccion_linux(pdf, filas_iter, filas_ing):
+    """Compara la corrida principal con la de datos/linux, si existe."""
+    dir_linux = DIR_DATOS / "linux"
+    if not (dir_linux / "iterativo.csv").exists():
+        return
+    lin_iter = leer_csv(dir_linux / "iterativo.csv")
+    lin_ing = leer_csv(dir_linux / "ingenuo.csv")
+    lin_meta = leer_metadatos(dir_linux / "metadatos.txt")
+
+    def media(filas):
+        valores = razones(filas)
+        return sum(valores) / len(valores)
+
+    def cocientes(filas):
+        return {
+            fila["n"]: fila["razon"] / PHI ** (fila["n"] / 2)
+            for fila in filas
+            if fila["razon"] is not None
+        }
+
+    pdf.seccion("Reproducción en Linux")
+    pdf.parrafo(
+        "El experimento se repitió sin cambios en otra máquina: "
+        f"{lin_meta['plataforma']}, {lin_meta.get('cpu', 'CPU no registrada')}, "
+        f"Python {lin_meta['python'].split()[0]}, con la misma semilla, repeticiones, "
+        "tamaños y versiones de matplotlib y fpdf2. Los datos están en datos/linux/ y "
+        "las figuras en figuras/linux/."
+    )
+    m_win, m_lin = media(filas_iter), media(lin_iter)
+    filas = [
+        ["Iterativo: razón media", fmt_razon(m_win), fmt_razon(m_lin)],
+        ["Iterativo: grado log2", f"{math.log2(m_win):.2f}", f"{math.log2(m_lin):.2f}"],
+    ]
+    c_win, c_lin = cocientes(filas_ing), cocientes(lin_ing)
+    for n in sorted(c_win):
+        filas.append(
+            [f"Ingenuo n = {n}: medida / φ^(n/2)", f"{c_win[n]:.2f}", f"{c_lin.get(n, float('nan')):.2f}"]
+        )
+    pdf.tabla(["Indicador", "Windows", "Linux"], filas, [80, 45, 45])
+    if COMENTARIO_LINUX.strip():
+        pdf.parrafo(COMENTARIO_LINUX.strip())
+
+
 def construir_pdf(filas_iter, filas_ing, meta, resultado, salida_pruebas, texto_iterativo, texto_ingenuo):
     pruebas_ok = resultado.wasSuccessful()
     estado = (
@@ -445,11 +512,14 @@ def construir_pdf(filas_iter, filas_ing, meta, resultado, salida_pruebas, texto_
         "para correrlas."
     )
     pdf.parrafo(
-        "Las pruebas cubren cinco obligaciones. Los casos conocidos comparan las dos "
-        "funciones con F(0) hasta F(16), tomados de la definición. La precondición se "
+        "Las pruebas cubren seis obligaciones. Los casos conocidos comparan las dos "
+        "funciones con F(0) hasta F(16), tomados de la definición. Los valores grandes "
+        "comprueban la función iterativa real con F(50), F(100) y F(200), tomados de la "
+        "sucesión publicada (OEIS A000045), y el ingenuo con F(25). La precondición se "
         "ensaya en las dos funciones con -1, -5, 1.5, 3.0, el texto \"5\", True y False. "
         "El contraste diferencial exige igualdad en 0 ≤ n ≤ 20. El invariante se comprueba "
-        "vuelta por vuelta hasta n = 30."
+        "vuelta por vuelta hasta n = 30, sobre una réplica del ciclo; por eso los valores "
+        "grandes verifican además la función entregada."
     )
     pdf.parrafo(estado + " Comando: .\\.venv\\Scripts\\python.exe -m unittest pruebas.py -v")
     if not pruebas_ok:
@@ -531,10 +601,18 @@ def construir_pdf(filas_iter, filas_ing, meta, resultado, salida_pruebas, texto_
 
     pdf.seccion("7. Uso de IA y reproducibilidad")
     pdf.parrafo(
-        "Herramienta y versión: Cursor, agente Auto, enrutador de agentes de Cursor, "
-        f"en la sesión del {date.today().strftime('%d/%m/%Y')}. El informe se generó con "
-        f"fpdf2 {fpdf.__version__} y las gráficas con matplotlib {matplotlib.__version__}, "
-        "sobre Python 3.13.0 de CPython para Windows de 64 bits."
+        "Herramientas y versiones: Cursor, agente Auto (enrutador de agentes de Cursor), "
+        "y Claude Code 2.1.319 con el modelo Claude Opus 5.5 (claude-opus-5-5), ambos "
+        f"el 06/11/2026. El informe se generó con fpdf2 {fpdf.__version__} y las gráficas "
+        f"con matplotlib {matplotlib.__version__}, sobre Python {meta['python'].split()[0]} "
+        f"({meta['plataforma']})."
+    )
+    pdf.parrafo(
+        "Claude Code se usó para revisar la entrega frente a las instrucciones, quitar "
+        "notas del agente anterior que habían quedado en el informe, preparar el entorno "
+        "de Linux con las mismas versiones, ejecutar la reproducción en Linux, crear el "
+        "repositorio Git, añadir la prueba de valores grandes y estimar el grado con la "
+        "media de las razones."
     )
     pdf.parrafo(
         "Para qué se usó: convertir el algoritmo, que estaba en una transcripción de "
@@ -574,6 +652,8 @@ def construir_pdf(filas_iter, filas_ing, meta, resultado, salida_pruebas, texto_
         "El PDF se vuelve a armar con generar_informe.py y queda en "
         f"informe/{PDF_NOMBRE}."
     )
+    seccion_reproduccion_linux(pdf, filas_iter, filas_ing)
+
     pdf.parrafo(
         "Contribución de cada integrante: se declara en el mensaje del foro, una línea "
         "por persona. El repositorio contiene el código, pruebas.py, el README con los "
