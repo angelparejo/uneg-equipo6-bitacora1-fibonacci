@@ -25,7 +25,20 @@ PHI = (1 + math.sqrt(5)) / 2
 # Interpretación de la reproducción en Linux, redactada por quien la hizo.
 # Si queda vacío, el informe muestra solo la tabla comparativa.
 COMENTARIO_LINUX = """
+Replicamos las mediciones en un ambiente Linux, con las mismas versiones de Python y dependencias, para aislar discrepancias asociadas a la versión del intérprete. El algoritmo iterativo mostró una razón media de 3.66, consistente con el costo cuadrático Θ(n²), porque el costo de sumar crece con la longitud en bits de F(n). Por otro lado, el algoritmo ingenuo en n = 28 registró una relación de 1.09 con la referencia φ^(n/2), frente al 0.63 atípico de Windows, donde la mediana de n = 14 fue 1.7 veces su propio mínimo, lo que indica ruido de medición y no un comportamiento asintótico anómalo. Aunque los tiempos absolutos difieren (1.07 s en Linux frente a 1.37 s en Windows, para n = 320000), las razones coinciden: la constante depende de la máquina y el orden de crecimiento se mantiene. Recomendamos aumentar las repeticiones para reducir ese ruido.
 """
+
+UNIVERSIDAD = "Universidad Nacional Experimental de Guayana (UNEG)"
+ASIGNATURA = "Análisis y Diseño de Algoritmos · Prof. Ana Sosa"
+
+# Integrantes en la portada, uno por línea, con su nombre real.
+# Cada compañero puede agregar o corregir su propio nombre en su commit.
+INTEGRANTES = [
+    "Angel Parejo",
+    # "Nombre Apellido",  # GitHub: carolinabrito84
+    # "Nombre Apellido",  # GitHub: asalazars23
+    # "Nombre Apellido",  # GitHub: anthojesus
+]
 
 if Path(r"C:\Windows\Fonts\arial.ttf").exists():
     FUENTES = {
@@ -238,10 +251,15 @@ class Informe(FPDF):
         self.set_font("Arial", "", 11)
         self.set_text_color(0, 0, 0)
         self.bloque(
-            f"Equipo {EQUIPO}\n6 de noviembre de 2026",
+            f"{UNIVERSIDAD}\n{ASIGNATURA}\nEquipo {EQUIPO}",
             alto=6,
             alineacion="C",
         )
+        if INTEGRANTES:
+            self.set_font("Arial", "I", 11)
+            self.bloque("Integrantes: " + ", ".join(INTEGRANTES), alto=6, alineacion="C")
+            self.set_font("Arial", "", 11)
+        self.bloque("6 de noviembre de 2026", alto=6, alineacion="C")
         self.ln(2)
 
     def seccion(self, texto):
