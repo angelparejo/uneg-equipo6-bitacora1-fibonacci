@@ -1,0 +1,12 @@
+semilla=20261106
+aleatoriedad=ninguna
+nota=El experimento cronometra funciones deterministas. La semilla se fija y se registra; no interviene en los tiempos.
+python=3.13.0 (tags/v3.13.0:60403a5, Oct  7 2024, 09:38:07) [MSC v.1941 64 bit (AMD64)]
+plataforma=Windows-11-10.0.26200-SP0
+repeticiones=5
+calentamiento=1 llamada por cada n, fuera de la mediana
+reloj=time.perf_counter
+estadistico=mediana
+tamanios_iterativo=[10000, 20000, 40000, 80000, 160000, 320000]
+tamanios_ingenuo=[8, 10, 12, 14, 16, 20, 24, 28, 32]
+modelo_de_duplicacion=la razón de una fila es T(n)/T(n/2) cuando n/2 está en la serie
